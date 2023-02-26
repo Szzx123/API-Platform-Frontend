@@ -16,7 +16,7 @@ import {
   listInterfaceInfoByPageUsingGET, updateInterfaceInfoUsingPOST
 } from "@/services/api-backend/interfaceInfoController";
 import {SortOrder} from "antd/es/table/interface";
-import CreateModal from "@/pages/InterfaceInfo/components/CreateModal";
+import CreateModal from "@/pages/Admin/InterfaceInfo/components/CreateModal";
 
 
 
@@ -192,14 +192,34 @@ const TableList: React.FC = () => {
         >
           修改
         </a >,
-        <a
+        <Button
+          type="text"
+          danger
           key="config"
           onClick={() => {
             handleRemove(record);
           }}
         >
           删除
-        </a >,
+        </Button >,
+        record.status === 0 ? <a
+          key="config"
+          onClick={() => {
+            handleRemove(record);
+          }}
+        >
+          发布
+        </a > : null,
+        record.status === 1 ? <Button
+          type="text"
+          danger
+          key="config"
+          onClick={() => {
+            handleRemove(record);
+          }}
+        >
+          下线
+        </ Button> : null,
       ],
     },
   ];
