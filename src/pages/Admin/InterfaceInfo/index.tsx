@@ -12,8 +12,12 @@ import { Button, Drawer, message } from 'antd';
 import React, { useRef, useState } from 'react';
 import UpdateModal from './components/UpdateModal';
 import {
-  addInterfaceInfoUsingPOST, deleteInterfaceInfoUsingPOST,
-  listInterfaceInfoByPageUsingGET, updateInterfaceInfoUsingPOST
+  addInterfaceInfoUsingPOST,
+  deleteInterfaceInfoUsingPOST,
+  listInterfaceInfoByPageUsingGET,
+  offlineInterfaceInfoUsingPOST,
+  onlineInterfaceInfoUsingPOST,
+  updateInterfaceInfoUsingPOST
 } from "@/services/api-backend/interfaceInfoController";
 import {SortOrder} from "antd/es/table/interface";
 import CreateModal from "@/pages/Admin/InterfaceInfo/components/CreateModal";
@@ -35,8 +39,9 @@ const TableList: React.FC = () => {
   const [showDetail, setShowDetail] = useState<boolean>(false);
 
   const actionRef = useRef<ActionType>();
-  const [currentRow, setCurrentRow] = useState<API.RuleListItem>();
-  const [selectedRowsState, setSelectedRows] = useState<API.RuleListItem[]>([]);
+  const [currentRow, setCurrentRow] = useState<API.InterfaceInfo>();
+  const [selectedRowsState, setSelectedRows] = useState<API.InterfaceInfo[]>([]);
+
 
   /**
    * @en-US Update node
@@ -45,9 +50,13 @@ const TableList: React.FC = () => {
    * @param fields
    */
   const handleUpdate = async (fields: API.InterfaceInfo) => {
+    if (!currentRow) {
+      return ;
+    }
     const hide = message.loading('Configuring');
     try {
       await updateInterfaceInfoUsingPOST({
+        id: currentRow.id,
         ...fields
       });
       hide();
@@ -106,6 +115,55 @@ const TableList: React.FC = () => {
   };
 
   /**
+   * 发布接口
+   *
+   * @param record
+   */
+  const handleOnline = async (record: API.IdRequest) => {
+    const hide = message.loading('发布中');
+    if (!record) return true;
+    try {
+      await onlineInterfaceInfoUsingPOST({
+        id: record.id
+      });
+      hide();
+      message.success('操作成功');
+      actionRef.current?.reload();
+      return true;
+    } catch (error: any) {
+      hide();
+      message.error('操作失败，' + error.message);
+      return false;
+    }
+  };
+
+
+  /**
+   * 下线接口
+   *
+   * @param record
+   */
+  const handleOffline = async (record: API.IdRequest) => {
+    const hide = message.loading('发布中');
+    if (!record) return true;
+    try {
+      await offlineInterfaceInfoUsingPOST({
+        id: record.id
+      });
+      hide();
+      message.success('操作成功');
+      actionRef.current?.reload();
+      return true;
+    } catch (error: any) {
+      hide();
+      message.error('操作失败，' + error.message);
+      return false;
+    }
+  };
+
+
+
+  /**
    * @en-US International configuration
    * @zh-CN 国际化配置
    * */
@@ -142,14 +200,19 @@ const TableList: React.FC = () => {
       valueType: 'text',
     },
     {
+      title: '请求参数',
+      dataIndex: 'requestParams',
+      valueType: 'jsonCode',
+    },
+    {
       title: '请求头',
       dataIndex: 'requestHeader',
-      valueType: 'textarea',
+      valueType: 'jsonCode',
     },
     {
       title: '响应头',
       dataIndex: 'responseHeader',
-      valueType: 'textarea',
+      valueType: 'jsonCode',
     },
     {
       title: '状态',
@@ -192,6 +255,24 @@ const TableList: React.FC = () => {
         >
           修改
         </a >,
+        record.status === 0 ? <a
+          key="config"
+          onClick={() => {
+            handleOnline(record);
+          }}
+        >
+          发布
+        </a > : null,
+        record.status === 1 ? <Button
+          type="text"
+          danger
+          key="config"
+          onClick={() => {
+            handleOffline(record);
+          }}
+        >
+          下线
+        </Button> : null,
         <Button
           type="text"
           danger
@@ -202,24 +283,6 @@ const TableList: React.FC = () => {
         >
           删除
         </Button >,
-        record.status === 0 ? <a
-          key="config"
-          onClick={() => {
-            handleRemove(record);
-          }}
-        >
-          发布
-        </a > : null,
-        record.status === 1 ? <Button
-          type="text"
-          danger
-          key="config"
-          onClick={() => {
-            handleRemove(record);
-          }}
-        >
-          下线
-        </ Button> : null,
       ],
     },
   ];
